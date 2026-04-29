@@ -1,3 +1,6 @@
+import pickle
+import os
+
 player = {
     "status": "배고픔",
     "location": "연대앞 버스정류장",
@@ -7,8 +10,8 @@ player = {
 }
 
 environment = {"time": 11}
-
 settings = {"difficulty": "보통"}
+input_history = []
 
 map_grid = [
     ["", "", "", "", "새천년관", "이윤재관"],
@@ -92,11 +95,79 @@ def use_item(item_name):
             print(f"{item_name}을(를) 먹었습니다. HP: {player['HP']}")
             return
 
+def save_game():
+    filename = input("저장할 파일명을 입력하세요 (예: save1): ")
+    
+    if not filename.endswith(".pkl"):
+        filename += ".pkl"
+    
+    save_data = {
+        "player": player,
+        "environment": environment,
+        "settings": settings,
+        "row": row,
+        "col": col,
+        "input_history": input_history
+    }
+    
+    with open(filename, "wb") as f:
+        pickle.dump(save_data, f)
+    
+    print(f"게임이 {filename}에 저장되었습니다.")
+
+def load_game():
+    global player, environment, settings, row, col, input_history
+    
+    pkl_files = [f for f in os.listdir(".") if f.endswith(".pkl")]
+    
+    if len(pkl_files) > 0:
+        print("현재 폴더의 저장 파일들:")
+        for i, name in enumerate(pkl_files, start=1):
+            print(f"{i}) {name}")
+        print("또는 파일 경로를 직접 입력하세요 (상대경로/절대경로 모두 가능)")
+    else:
+        print("현재 폴더에 저장 파일이 없습니다.")
+        print("파일 경로를 직접 입력하세요 (상대경로/절대경로 모두 가능)")
+    
+    choice = input("불러올 파일의 번호 또는 경로를 입력하세요: ")
+    
+    filename = None
+    if choice.isdigit():
+        idx = int(choice) - 1
+        if 0 <= idx < len(pkl_files):
+            filename = pkl_files[idx]
+        else:
+            print("잘못된 번호입니다.")
+            return
+    else:
+        filename = choice
+    
+    if not os.path.exists(filename):
+        print(f"파일을 찾을 수 없습니다: {filename}")
+        return
+    
+    try:
+        with open(filename, "rb") as f:
+            save_data = pickle.load(f)
+        
+        player = save_data["player"]
+        environment = save_data["environment"]
+        settings = save_data["settings"]
+        row = save_data["row"]
+        col = save_data["col"]
+        input_history = save_data["input_history"]
+        
+        print(f"{filename}에서 게임을 불러왔습니다.")
+        print(f"현재 위치: {player['location']}, HP: {player['HP']}, 잔액: {player['balance']}원")
+    except Exception as e:
+        print(f"불러오기 실패: {e}")
+
 row = 6
 col = 0 
 
 while True:
     user_input = input("입력: ")
+    input_history.append(user_input)
 
     if user_input == "상태":
         show_status()
@@ -119,6 +190,12 @@ while True:
     elif user_input == "구매":
             interact_shop()
             continue
+    elif user_input == "저장":
+        save_game()
+        continue
+    elif user_input == "불러오기":
+        load_game()
+        continue
 
     direction = user_input
 
