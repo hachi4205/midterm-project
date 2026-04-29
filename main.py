@@ -1,11 +1,18 @@
 player = {'status': '배고픔', 'location': '연대앞 버스정류장'}
 environment = {'time': 11}
 
+settings = {"difficulty": "보통"}
+
 map_grid = [
     ["공학관", "백양로1", "백주년기념관"],
     ["공학원", "백양로1", "공터1"],
     ["연대앞 버스정류장", "정문", "세브란스병원 버스정류장"]
 ]
+
+print(f"주인공 상태: {player['status']}")
+print(f"현재 위치: {player['location']}")
+print(f"현재 시각: {environment['time']}시")
+print(f"난이도: {settings['difficulty']}")
 
 row = 2
 col = 0
