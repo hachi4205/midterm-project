@@ -2,7 +2,8 @@ import state
 from state import player
 from data import (
     map_grid, shop_items, available_quests, intro_quest,
-    buy_places, sell_places, quest_places, event_info
+    buy_places, sell_places, quest_places, event_info,
+    sell_places_high, sell_places_normal, sell_prices
 )
 
 def get_neighbors():
@@ -118,6 +119,52 @@ def interact_shop():
         player["inventory"].append(item_name)
         print(f"{item_name}을(를) 구매해서 가방에 넣었다. 계좌 잔액 = {player['balance']}원")
 
+def interact_sell():
+    location = player["location"]
+    
+    if location in sell_places_high:
+        prices = sell_prices["high"]
+    elif location in sell_places_normal:
+        prices = sell_prices["normal"]
+    else:
+        print("이곳에서는 판매할 수 없습니다.")
+        return
+    
+    while True:
+        counts = {}
+        for item in player["inventory"]:
+            counts[item] = counts.get(item, 0) + 1
+        
+        sellable = {name: qty for name, qty in counts.items() if name in prices}
+        
+        if len(sellable) == 0:
+            print("팔 것이 없어서 종료합니다.")
+            return
+        
+        print("무엇을 판매하시겠습니까?")
+        item_list = list(sellable.keys())
+        for i, name in enumerate(item_list, start=1):
+            print(f"{i}) {name} x{sellable[name]}")
+        print(f"{len(item_list) + 1}) 종료")
+        
+        choice = input("선택하세요: ")
+        
+        if choice == str(len(item_list) + 1):
+            print("판매를 종료합니다.")
+            return
+        if not choice.isdigit():
+            print("숫자를 입력하세요.")
+            continue
+        idx = int(choice) - 1
+        if idx < 0 or idx >= len(item_list):
+            print("잘못된 선택입니다.")
+            continue
+        
+        item_name = item_list[idx]
+        price = prices[item_name]
+        player["inventory"].remove(item_name)
+        player["balance"] += price
+        print(f"{item_name}를 판매해서 {price}원을 벌었다. 계좌 잔액 = {player['balance']}원")
 
 def open_bag():
     if len(player["inventory"]) == 0:
@@ -164,10 +211,7 @@ def show_quests():
         else:
             print(f"- {q}")
 
-
-def interact():
-    location = player["location"]
-
+def handle_quest_interaction(location):
     if location == "정문":
         if intro_quest["name"] not in player["quests"]:
             print(intro_quest["description"])
@@ -176,7 +220,7 @@ def interact():
         else:
             print("이미 독수리상으로 가는 임무를 받았습니다.")
         return
-
+    
     if location == "독수리상":
         if intro_quest["name"] in player["quests"]:
             player["quests"].remove(intro_quest["name"])
@@ -187,11 +231,8 @@ def interact():
                 print(f"{q_name} - {q_info['description']}")
         return
 
-    if location == "학생회관":
-        interact_shop()
-        return
-
     if location == "이윤재관":
+        # Logic 이윤재관 (sẽ chi tiết ở bước 6)
         remaining = [q for q in player["quests"] if q in available_quests]
         if intro_quest["name"] in player["quests"]:
             print("먼저 독수리상에 가서 임무를 받아오세요.")
@@ -201,5 +242,34 @@ def interact():
         else:
             print(f"아직 해결하지 못한 임무가 있습니다: {remaining}")
         return
+    
+    print("(임무 처리는 추후 구현)")
 
-    print("이곳에서는 특별한 상호작용이 없습니다.")
+
+def interact():
+    location = player["location"]
+    
+    available = get_available_interactions(location)
+    
+    if len(available) == 0:
+        print("이곳에서는 특별한 상호작용이 없습니다.")
+        return
+    
+    if len(available) == 1:
+        action_type = available[0]
+    else:
+        print("어떤 상호작용을 하시겠습니까?")
+        for i, t in enumerate(available, start=1):
+            print(f"{i}) {t}")
+        choice = input("선택하세요: ")
+        if not choice.isdigit() or int(choice) < 1 or int(choice) > len(available):
+            print("잘못된 선택입니다.")
+            return
+        action_type = available[int(choice) - 1]
+    
+    if action_type == "구매":
+        interact_shop()
+    elif action_type == "판매":
+        interact_sell()
+    elif action_type == "임무":
+        handle_quest_interaction(location)
