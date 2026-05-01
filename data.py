@@ -10,8 +10,16 @@ map_grid = [
 
 shop_items = {
     "학생회관": {
-        "두쫀쿠": {"price": 5000, "HP_gain": 25},
-        "카페라떼": {"price": 2500, "HP_gain": 25}
+        "두쫀쿠": {"price": 5000, "HP_gain": 10},
+        "카페라떼": {"price": 3000, "HP_gain": 5}
+    },
+    "스타벅스": {
+        "두쫀쿠": {"price": 4000, "HP_gain": 10},
+        "카페라떼": {"price": 2000, "HP_gain": 5}
+    },
+    "ABMRC": {
+        "두쫀쿠": {"price": 4000, "HP_gain": 10},
+        "카페라떼": {"price": 2000, "HP_gain": 5}
     }
 }
 
