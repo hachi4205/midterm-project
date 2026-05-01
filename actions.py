@@ -4,7 +4,8 @@ from data import (
     map_grid, shop_items, available_quests, intro_quest,
     buy_places, sell_places, quest_places, event_info,
     sell_places_high, sell_places_normal, sell_prices,
-    quest_answers, quest_report_location, quest_questions
+    quest_answers, quest_report_location, quest_questions,
+    hp_loss_by_difficulty, valid_difficulties
 )
 
 def get_neighbors():
@@ -68,7 +69,9 @@ def move(direction):
 
     state.row, state.col = new_row, new_col
     player["location"] = map_grid[state.row][state.col]
-    player["HP"] -= 1
+    difficulty = state.settings["difficulty"]
+    hp_loss = hp_loss_by_difficulty.get(difficulty, 1)
+    player["HP"] -= hp_loss
 
     location = player["location"]
     move_msg = f"{location}에 도착했다."
@@ -303,3 +306,30 @@ def cmd_quest():
     if result == "GAME_OVER":
         return "GAME_OVER"
     return None
+
+def cmd_difficulty():
+    current = state.settings["difficulty"]
+    print(f"현재 난이도: {current}")
+    print("난이도를 변경하시겠습니까?")
+    for i, d in enumerate(valid_difficulties, start=1):
+        print(f"{i}) {d}")
+    print(f"{len(valid_difficulties) + 1}) 변경하지 않음")
+    
+    choice = input("선택하세요: ")
+    state.input_history.append(choice)
+    
+    if choice == str(len(valid_difficulties) + 1):
+        print("난이도를 변경하지 않습니다.")
+        return
+    
+    if not choice.isdigit():
+        print("숫자를 입력하세요.")
+        return
+    idx = int(choice) - 1
+    if idx < 0 or idx >= len(valid_difficulties):
+        print("잘못된 선택입니다.")
+        return
+    
+    new_difficulty = valid_difficulties[idx]
+    state.settings["difficulty"] = new_difficulty
+    print(f"난이도가 '{new_difficulty}'(으)로 변경되었습니다.")
