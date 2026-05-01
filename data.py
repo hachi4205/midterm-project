@@ -1,3 +1,6 @@
+import pickle
+import os 
+
 map_grid = [
     ["종합관", "본관", "경영관", "노천극장", "새천년관", "이윤재관"],
     ["백양관", "백양로5", "대강당", "음악관", "알렌관", "ABMRC"],
@@ -37,11 +40,6 @@ available_quests = {
 intro_quest = {
     "name": "독수리상으로 가기",
     "description": "학교에서 어떤 일들이 일어나고있는지 소식들이 모이는 독수리상에서 알아보자."
-}
-
-quest_answers = {
-    "교내 부조리 수사": "중앙도서관",    
-    "교내 위생사건 수사": "공터2"        
 }
 
 quest_report_location = {
@@ -88,7 +86,19 @@ sell_prices = {
 
 quest_places = ["정문", "독수리상", "본관", "세브란스", "이윤재관"]
 
-event_info = {
-    "중앙도서관": "자리에 짐을 잔뜩 올려서 차지하고, 키오스크에서 배석받은 학생이 와도 비켜주지 않는 빌런이 있다.",
-    "공터2": "학생회관에서 버린 음식물쓰레기가 부패하여 학생회관으로 흘러들어가고있다!"
-}
+def load_events(filepath="events.pkl"):
+    if not os.path.exists(filepath):
+        print(f"{filepath} 파일을 찾을 수 없습니다. create_events.py를 먼저 실행하세요.")
+        return {}, {}
+    
+    try:
+        with open(filepath, "rb") as f:
+            data = pickle.load(f)
+        events = data.get("events", {})
+        answers = data.get("answers", {})
+        return events, answers
+    except Exception as e:
+        print(f"events.pkl 로드 중 오류: {e}")
+        return {}, {}
+
+event_info, quest_answers = load_events()
