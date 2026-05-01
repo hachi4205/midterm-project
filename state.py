@@ -1,7 +1,7 @@
 player = {
     "status": "배고픔",
     "location": "연대앞 버스정류장",
-    "HP": 10,
+    "HP": 10.0,
     "balance": 10000,
     "inventory": [],
     "quests": [],
