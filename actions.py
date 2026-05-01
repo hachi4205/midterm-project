@@ -1,7 +1,9 @@
 import state
 from state import player
-from data import map_grid, shop_items, available_quests, intro_quest
-
+from data import (
+    map_grid, shop_items, available_quests, intro_quest,
+    buy_places, sell_places, quest_places, event_info
+)
 
 def get_neighbors():
     neighbors = {}
@@ -34,6 +36,15 @@ def show_status():
     print(f"현재위치 = {player['location']}")
     print(f"동서남북 = {neighbors['동']}, {neighbors['서']}, {neighbors['남']}, {neighbors['북']}")
 
+def get_available_interactions(location):
+    interactions = []
+    if location in buy_places:
+        interactions.append("구매")
+    if location in sell_places:
+        interactions.append("판매")
+    if location in quest_places:
+        interactions.append("임무")
+    return interactions
 
 def move(direction):
     new_row, new_col = state.row, state.col
@@ -56,7 +67,18 @@ def move(direction):
     state.row, state.col = new_row, new_col
     player["location"] = map_grid[state.row][state.col]
     player["HP"] -= 1
-    print(f"{player['location']}으로 이동했다.")
+
+    location = player["location"]
+    move_msg = f"{location}에 도착했다."
+
+    if location in event_info:
+        move_msg += f" {event_info[location]}"
+
+    interactions = get_available_interactions(location)
+    if interactions:
+        move_msg += f" [{', '.join(interactions)}]"
+
+    print(move_msg)
 
 
 def interact_shop():
