@@ -1,12 +1,15 @@
 import state
-from actions import show_status, show_quests, open_bag, interact, move
+from actions import (show_status, show_quests, open_bag, move,
+                     cmd_buy, cmd_sell, cmd_quest) 
 from save_load import save_game, load_game
 
 action_map = {
     "상태": show_status,
-    "임무": show_quests,
+    "임무": cmd_quest,          
+    "임무목록": show_quests,      
     "가방": open_bag,
-    "상호작용": interact,
+    "구매": cmd_buy,       
+    "판매": cmd_sell,         
     "저장": save_game,
     "불러오기": load_game,
 }
@@ -28,7 +31,9 @@ def main():
             break
 
         if user_input in action_map:
-            action_map[user_input]()
+            result = action_map[user_input]()   
+            if result == "GAME_OVER":         
+                break
         elif user_input in direction_set:
             move(user_input)
         else:
