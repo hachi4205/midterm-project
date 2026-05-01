@@ -6,12 +6,16 @@ player = {
     "location": "연대앞 버스정류장",
     "HP": 10,
     "balance": 50000,
-    "inventory": []
+    "inventory": [],
+    "quests": []
 }
 
 environment = {"time": 11}
 settings = {"difficulty": "보통"}
 input_history = []
+
+row = 6
+col = 0 
 
 map_grid = [
     ["", "", "", "", "새천년관", "이윤재관"],
@@ -29,6 +33,46 @@ shop_items = {
         "카페라떼": {"price": 2500, "HP_gain": 25}
     }
 }
+
+available_quests = {
+    "교내 부조리 수사": {
+        "description": "교내 어딘가에서 부조리가 일어나고있다. 이동하고 상호작용을 해서 부조리를 찾아서 보고하라.",
+        "report_to": "이윤재관"
+    },
+    "교내 위생사건 수사": {
+        "description": "학생들이 단체로 식중독에 걸렸다. 이동하고 상호작용을 해서 위생사건의 원인을 찾아서 보고하라.",
+        "report_to": "이윤재관"
+    }
+}
+
+intro_quest = {
+    "name": "독수리상으로 가기",
+    "description": "학교에서 어떤 일들이 일어나고있는지 소식들이 모이는 독수리상에서 알아보자."
+}
+
+def move(direction):
+    global row, col
+    new_row, new_col = row, col
+
+    if direction == "북":
+        new_row = row - 1
+    elif direction == "남":
+        new_row = row + 1
+    elif direction == "동":
+        new_col = col + 1
+    elif direction == "서":
+        new_col = col - 1
+
+    if (new_row < 0 or new_row >= len(map_grid)
+            or new_col < 0 or new_col >= len(map_grid[0])
+            or map_grid[new_row][new_col] == ""):
+        print("그 방향은 막혔어.")
+        return
+
+    row, col = new_row, new_col
+    player["location"] = map_grid[row][col]
+    player["HP"] -= 1
+    print(f"{player['location']}으로 이동했다.")
 
 def interact_shop():
     current_place = player["location"]
@@ -70,17 +114,57 @@ def interact_shop():
         player["inventory"].append(item_name)
         print(f"{item_name}을(를) 구매해서 가방에 넣었다. 계좌 잔액: {player['balance']}원")
 
-def show_status():
-    print(f"계좌의 잔액: {player['balance']}원")
-    print(f"HP: {player['HP']}")
+def get_neighbors():
+    neighbors = {}
 
-def show_inventory():
+    if row - 1 >= 0 and map_grid[row - 1][col] != "":
+        neighbors["북"] = map_grid[row - 1][col]
+    else:
+        neighbors["북"] = "막힘"
+
+    if row + 1 < len(map_grid) and map_grid[row + 1][col] != "":
+        neighbors["남"] = map_grid[row + 1][col]
+    else:
+        neighbors["남"] = "막힘"
+
+    if col + 1 < len(map_grid[0]) and map_grid[row][col + 1] != "":
+        neighbors["동"] = map_grid[row][col + 1]
+    else:
+        neighbors["동"] = "막힘"
+
+    if col - 1 >= 0 and map_grid[row][col - 1] != "":
+        neighbors["서"] = map_grid[row][col - 1]
+    else:
+        neighbors["서"] = "막힘"
+    return neighbors
+
+def show_status():
+    neighbors = get_neighbors() 
+    print(f"계좌의 잔액 = {player['balance']}원")
+    print(f"HP = {player['HP']}")
+    print(f"현재위치 = {player['location']}")
+    print(f"동서남북 = {neighbors['동']}, {neighbors['서']}, {neighbors['남']}, {neighbors['북']}")  
+
+
+def open_bag():
     if len(player["inventory"]) == 0:
-        print("가방이 비어있습디다.")
-        return 
-    print("가방 안의 물건들: ") 
+        print("가방이 비어있습니다.")
+        return
+    print("가방 안의 물건들:")
     for i, item in enumerate(player["inventory"], start=1):
         print(f"{i}) {item}")
+
+    sub_input = input("사용할 물건의 이름 또는 번호를 입력하세요 (또는 '종료'): ")
+    if sub_input == "종료":
+        return
+    if sub_input.isdigit():
+        idx = int(sub_input) - 1
+        if 0 <= idx < len(player["inventory"]):
+            use_item(player["inventory"][idx])
+        else:
+            print("잘못된 번호입니다.")
+    else:
+        use_item(sub_input)
 
 def use_item(item_name):
     if item_name not in player["inventory"]:
@@ -94,6 +178,56 @@ def use_item(item_name):
             player["inventory"].remove(item_name)
             print(f"{item_name}을(를) 먹었습니다. HP: {player['HP']}")
             return
+
+def show_quests():
+    if len(player["quests"]) == 0:
+        print("현재 가지고있는 임무가 없습니다.")
+        return
+    print("[임무목록]")
+    for q in player["quests"]:
+        if q in available_quests:
+            print(f"- {q}: {available_quests[q]['description']}")
+        else:
+            print(f"- {q}")
+
+def interact():
+    location = player["location"]
+
+    if location == "정문":
+        if intro_quest["name"] not in player["quests"]:
+            print(intro_quest["description"])
+            player["quests"].append(intro_quest["name"])
+            print("[임무목록]에 임무가 추가되었습니다.")
+        else:
+            print("이미 독수리상으로 가는 임무를 받았습니다.")
+        return
+
+    if location == "독수리상":
+        if intro_quest["name"] in player["quests"]:
+            player["quests"].remove(intro_quest["name"])
+            print(f"다음의 임무가 해결되었다! [{intro_quest['description']}]")
+        for q_name, q_info in available_quests.items():
+            if q_name not in player["quests"]:
+                player["quests"].append(q_name)
+                print(f"{q_name} - {q_info['description']}")
+        return
+
+    if location == "학생회관":
+        interact_shop()
+        return
+
+    if location == "이윤재관":
+        remaining = [q for q in player["quests"] if q in available_quests]
+        if intro_quest["name"] in player["quests"]:
+            print("먼저 독수리상에 가서 임무를 받아오세요.")
+            return
+        if len(remaining) == 0:
+            print("모든 임무를 완료했습니다! 또 만나요~")
+        else:
+            print(f"아직 해결하지 못한 임무가 있습니다: {remaining}")
+        return
+
+    print("이곳에서는 특별한 상호작용이 없습니다.")
 
 def save_game():
     filename = input("저장할 파일명을 입력하세요 (예: save1): ")
@@ -162,69 +296,33 @@ def load_game():
     except Exception as e:
         print(f"불러오기 실패: {e}")
 
-row = 6
-col = 0 
+
+action_map = {
+    "상태": show_status,
+    "임무": show_quests,
+    "가방": open_bag,
+    "상호작용": interact,
+    "저장": save_game,
+    "불러오기": load_game,
+}
+
+direction_set = {"동", "서", "남", "북"}
+
+print("송도 생활을 마치고 신촌에 처음 도착했다. 연대앞 버스정류장이다.")
+print("임무완료를 보고할 장소는 이윤재관 511호다.")
+print("배가 고프다.")
 
 while True:
     user_input = input("입력: ")
     input_history.append(user_input)
 
-    if user_input == "상태":
-        show_status()
-        continue
-    elif user_input == "가방":
-        show_inventory()
-        if len(player["inventory"]) > 0:
-            sub_input = input("사용할 물건의 이름 또는 번호를 입력하세요 (또는 '종료'): ")
-            if sub_input == "종료":
-                continue
-            if sub_input.isdigit():
-                idx = int(sub_input) - 1
-                if 0 <= idx < len(player["inventory"]):
-                    use_item(player["inventory"][idx])
-                else:
-                    print("잘못된 번호입니다.")
-            else:
-                use_item(sub_input)
-        continue
-    elif user_input == "구매":
-            interact_shop()
-            continue
-    elif user_input == "저장":
-        save_game()
-        continue
-    elif user_input == "불러오기":
-        load_game()
-        continue
+    if user_input == "종료":
+        print("게임을 종료합니다.")
+        break
 
-    direction = user_input
-
-    new_row = row
-    new_col = col
-
-    if direction == "북":
-        new_row = row - 1
-    elif direction == "남":
-        new_row = row + 1
-    elif direction == "동":
-        new_col = col + 1
-    elif direction == "서":
-        new_col = col - 1
+    if user_input in action_map:
+        action_map[user_input]()
+    elif user_input in direction_set:
+        move(user_input)
     else:
-        print("잘못된 입력입니다. 동/서/남/북 중에서 선택하세요.")
-        continue
-
-    if new_row < 0 or new_row >= len(map_grid) or new_col < 0 or new_col >= len(map_grid[0]):
-        print("그 방향은 막혔어.")
-        continue
-
-    if map_grid[new_row][new_col] == "":
-        print("그 방향은 막혔어.")
-        continue
-    
-    row = new_row
-    col = new_col
-    player["location"] = map_grid[row][col]
-    player["HP"] -= 1
-
-    print(f"현재 위치: {player['location']}")
+        print("잘못된 입력입니다.")
