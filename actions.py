@@ -3,7 +3,8 @@ from state import player
 from data import (
     map_grid, shop_items, available_quests, intro_quest,
     buy_places, sell_places, quest_places, event_info,
-    sell_places_high, sell_places_normal, sell_prices
+    sell_places_high, sell_places_normal, sell_prices,
+    quest_answers, quest_report_location, quest_questions
 )
 
 def get_neighbors():
@@ -80,7 +81,6 @@ def move(direction):
         move_msg += f" [{', '.join(interactions)}]"
 
     print(move_msg)
-
 
 def interact_shop():
     current_place = player["location"]
@@ -213,7 +213,7 @@ def show_quests():
 
 def handle_quest_interaction(location):
     if location == "정문":
-        if intro_quest["name"] not in player["quests"]:
+        if intro_quest["name"] not in player["quests"] and intro_quest["name"] not in player["completed_quests"]:
             print(intro_quest["description"])
             player["quests"].append(intro_quest["name"])
             print("[임무목록]에 임무가 추가되었습니다.")
@@ -224,52 +224,82 @@ def handle_quest_interaction(location):
     if location == "독수리상":
         if intro_quest["name"] in player["quests"]:
             player["quests"].remove(intro_quest["name"])
+            player["completed_quests"].append(intro_quest["name"])
             print(f"다음의 임무가 해결되었다! [{intro_quest['description']}]")
+
         for q_name, q_info in available_quests.items():
-            if q_name not in player["quests"]:
+            if q_name not in player["quests"] and q_name not in player["completed_quests"]:
                 player["quests"].append(q_name)
                 print(f"{q_name} - {q_info['description']}")
         return
-
-    if location == "이윤재관":
-        # Logic 이윤재관 (sẽ chi tiết ở bước 6)
-        remaining = [q for q in player["quests"] if q in available_quests]
-        if intro_quest["name"] in player["quests"]:
-            print("먼저 독수리상에 가서 임무를 받아오세요.")
+    
+    if location in quest_questions:
+        info = quest_questions[location]
+        quest_name = info["quest_name"]
+        
+        if quest_name not in player["quests"]:
+            if quest_name in player["completed_quests"]:
+                print("이미 완료한 임무입니다.")
+            else:
+                print("먼저 독수리상에서 임무를 받아오세요.")
             return
-        if len(remaining) == 0:
-            print("모든 임무를 완료했습니다! 또 만나요~")
+        
+        print(info["question"])
+        answer = input("입력: ")
+        state.input_history.append(answer)
+        
+        if answer == quest_answers[quest_name]:
+            player["quests"].remove(quest_name)
+            player["completed_quests"].append(quest_name)
+            print(f"다음의 임무가 해결되었다! [{quest_name}]")
+            print("수업들으러 이윤재관 가야지!")
         else:
-            print(f"아직 해결하지 못한 임무가 있습니다: {remaining}")
+            print("답이 틀렸습니다.")
         return
     
-    print("(임무 처리는 추후 구현)")
-
-
-def interact():
-    location = player["location"]
-    
-    available = get_available_interactions(location)
-    
-    if len(available) == 0:
-        print("이곳에서는 특별한 상호작용이 없습니다.")
-        return
-    
-    if len(available) == 1:
-        action_type = available[0]
-    else:
-        print("어떤 상호작용을 하시겠습니까?")
-        for i, t in enumerate(available, start=1):
-            print(f"{i}) {t}")
-        choice = input("선택하세요: ")
-        if not choice.isdigit() or int(choice) < 1 or int(choice) > len(available):
-            print("잘못된 선택입니다.")
+    if location == "이윤재관":
+        bujori_done = "교내 부조리 수사" in player["completed_quests"]
+        wisaeng_done = "교내 위생사건 수사" in player["completed_quests"]
+        bujori_in_progress = "교내 부조리 수사" in player["quests"]
+        wisaeng_in_progress = "교내 위생사건 수사" in player["quests"]
+        
+        if not bujori_done and not wisaeng_done and \
+           not bujori_in_progress and not wisaeng_in_progress:
+            print("먼저 독수리상에서 임무를 받아오세요.")
             return
-        action_type = available[int(choice) - 1]
-    
-    if action_type == "구매":
-        interact_shop()
-    elif action_type == "판매":
-        interact_sell()
-    elif action_type == "임무":
-        handle_quest_interaction(location)
+        
+        if bujori_done and wisaeng_done:
+            print("부조리와 식중독 수사를 완료했구나! 수업은 이걸로 끝입니다. 또 만나요~")
+            return "GAME_OVER"
+        
+        if bujori_done:
+            print("부조리 수사를 완료했구나! 식중독 원인도 찾아주세요~")
+        elif wisaeng_done:
+            print("식중독 수사를 완료했구나! 부조리도 찾아주세요~")
+        else:
+            print("아직 수사를 완료하지 못했네요. 본관과 세브란스에 가서 보고하세요.")
+        return
+
+def cmd_buy():
+    location = player["location"]
+    if location not in buy_places:
+        print("이곳에서는 구매할 수 없습니다.")
+        return
+    interact_shop()
+
+def cmd_sell():
+    location = player["location"]
+    if location not in sell_places:
+        print("이곳에서는 판매할 수 없습니다.")
+        return
+    interact_sell()
+
+def cmd_quest():
+    location = player["location"]
+    if location not in quest_places:
+        print("이곳에서는 임무가 없습니다.")
+        return
+    result = handle_quest_interaction(location)
+    if result == "GAME_OVER":
+        return "GAME_OVER"
+    return None
