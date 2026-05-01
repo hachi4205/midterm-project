@@ -1,11 +1,12 @@
 import state
 from actions import (show_status, show_quests, open_bag, move,
-                     cmd_buy, cmd_sell, cmd_quest) 
+                     cmd_buy, cmd_sell, cmd_quest, cmd_difficulty) 
 from save_load import save_game, load_game
 
 action_map = {
     "상태": show_status,
-    "임무": cmd_quest,          
+    "임무": cmd_quest,
+    "난이도": cmd_difficulty,
     "임무목록": show_quests,      
     "가방": open_bag,
     "구매": cmd_buy,       
