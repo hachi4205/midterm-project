@@ -4,7 +4,8 @@ player = {
     "HP": 10,
     "balance": 10000,
     "inventory": [],
-    "quests": []
+    "quests": [],
+    "completed_quests": []
 }
 
 environment = {"time": 11}
