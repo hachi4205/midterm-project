@@ -5,7 +5,7 @@ __pycache__/
 
 # Test/temp pickle files
 first_test.pkl
-test_*.pkl
+test_difficulty.pkl
 save1.pkl
 playthrough.pkl
 
