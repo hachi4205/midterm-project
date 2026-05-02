@@ -1,13 +1,8 @@
 import state
 from state import player
-from data import (
-    map_grid, shop_items, available_quests, intro_quest,
-    buy_places, sell_places, quest_places, event_info,
-    sell_places_high, sell_places_normal, sell_prices,
-    quest_answers, quest_report_location, quest_questions,
-    hp_loss_by_difficulty, valid_difficulties
-)
+from data import map_grid, hp_loss_by_difficulty, valid_difficulties, available_quests
 from io_helper import get_input
+from place import places
 
 def get_neighbors():
     neighbors = {}
@@ -31,100 +26,6 @@ def get_neighbors():
     else:
         neighbors["서"] = "막힘"
     return neighbors
-
-def get_available_interactions(location):
-    interactions = []
-    if location in buy_places:
-        interactions.append("구매")
-    if location in sell_places:
-        interactions.append("판매")
-    if location in quest_places:
-        interactions.append("임무")
-    return interactions
-
-def interact_shop():
-    current_place = player.location
-    if current_place not in shop_items:
-        print("이곳에서는 구매할 수 없습니다.")
-        return
-    items = shop_items[current_place]
-    item_list = list(items.keys())
-
-    while True:
-        print("구매 가능한 품목:")
-        for i, name in enumerate(item_list, start=1):
-            info = items[name]
-            print(f"{i}) {name}: {info['price']}원, HP +{info['HP_gain']}")
-        print(f"{len(item_list) + 1}) 종료")
-
-        choice = get_input("선택하세요: ")
-
-        if choice == str(len(item_list) + 1):
-            print("구매를 종료합니다.")
-            return
-        if not choice.isdigit():
-            print("숫자를 입력하세요.")
-            continue
-        idx = int(choice) - 1
-        if idx < 0 or idx >= len(item_list):
-            print("잘못된 선택입니다.")
-            continue
-
-        item_name = item_list[idx]
-        price = items[item_name]["price"]
-        if player.balance < price:
-            print("잔액이 부족합니다.")
-            continue
-        player.balance -= price
-        player.inventory.append(item_name)
-        print(f"{item_name}을(를) 구매해서 가방에 넣었다. 계좌 잔액 = {player.balance}원")
-
-def interact_sell():
-    location = player.location
-
-    if location in sell_places_high:
-        prices = sell_prices["high"]
-    elif location in sell_places_normal:
-        prices = sell_prices["normal"]
-    else:
-        print("이곳에서는 판매할 수 없습니다.")
-        return
-    
-    while True:
-        counts = {}
-        for item in player.inventory:
-            counts[item] = counts.get(item, 0) + 1
-        
-        sellable = {name: qty for name, qty in counts.items() if name in prices}
-        
-        if len(sellable) == 0:
-            print("팔 것이 없어서 종료합니다.")
-            return
-        
-        print("무엇을 판매하시겠습니까?")
-        item_list = list(sellable.keys())
-        for i, name in enumerate(item_list, start=1):
-            print(f"{i}) {name} x{sellable[name]}")
-        print(f"{len(item_list) + 1}) 종료")
-        
-        choice = get_input("선택하세요: ")
-        
-        if choice == str(len(item_list) + 1):
-            print("판매를 종료합니다.")
-            return
-        if not choice.isdigit():
-            print("숫자를 입력하세요.")
-            continue
-        idx = int(choice) - 1
-        if idx < 0 or idx >= len(item_list):
-            print("잘못된 선택입니다.")
-            continue
-        
-        item_name = item_list[idx]
-        price = prices[item_name]
-        player.inventory.remove(item_name)
-        player.balance += price
-        print(f"{item_name}를 판매해서 {price}원을 벌었다. 계좌 잔액 = {player.balance}원")
 
 def open_bag():
     if len(player.inventory) == 0:
@@ -171,97 +72,20 @@ def show_quests():
         else:
             print(f"- {q}")
 
-def handle_quest_interaction(location):
-    if location == "정문":
-        if intro_quest["name"] not in player.quests and intro_quest["name"] not in player.completed_quests:
-            print(intro_quest["description"])
-            player.quests.append(intro_quest["name"])
-            print("[임무목록]에 임무가 추가되었습니다.")
-        else:
-            print("이미 독수리상으로 가는 임무를 받았습니다.")
-        return
-    
-    if location == "독수리상":
-        if intro_quest["name"] in player.quests:
-            player.quests.remove(intro_quest["name"])
-            player.completed_quests.append(intro_quest["name"])
-            print(f"다음의 임무가 해결되었다! [{intro_quest['description']}]")
-
-        for q_name, q_info in available_quests.items():
-            if q_name not in player.quests and q_name not in player.completed_quests:
-                player.quests.append(q_name)
-                print(f"{q_name} - {q_info['description']}")
-        return
-    
-    if location in quest_questions:
-        info = quest_questions[location]
-        quest_name = info["quest_name"]
-        
-        if quest_name not in player.quests:
-            if quest_name in player.completed_quests:
-                print("이미 완료한 임무입니다.")
-            else:
-                print("먼저 독수리상에서 임무를 받아오세요.")
-            return
-        
-        print(info["question"])
-        answer = get_input("입력: ")
-        
-        if answer == quest_answers[quest_name]:
-            player.quests.remove(quest_name)
-            player.completed_quests.append(quest_name)
-            print(f"다음의 임무가 해결되었다! [{quest_name}]")
-            print("수업들으러 이윤재관 가야지!")
-        else:
-            print("답이 틀렸습니다.")
-        return
-    
-    if location == "이윤재관":
-        bujori_done = "교내 부조리 수사" in player.completed_quests
-        wisaeng_done = "교내 위생사건 수사" in player.completed_quests
-        bujori_in_progress = "교내 부조리 수사" in player.quests
-        wisaeng_in_progress = "교내 위생사건 수사" in player.quests
-        
-        if not bujori_done and not wisaeng_done and \
-           not bujori_in_progress and not wisaeng_in_progress:
-            print("먼저 독수리상에서 임무를 받아오세요.")
-            return
-        
-        if bujori_done and wisaeng_done:
-            print("부조리와 식중독 수사를 완료했구나! 수업은 이걸로 끝입니다. 또 만나요~")
-            return "GAME_OVER"
-        
-        if bujori_done:
-            print("부조리 수사를 완료했구나! 식중독 원인도 찾아주세요~")
-        elif wisaeng_done:
-            print("식중독 수사를 완료했구나! 부조리도 찾아주세요~")
-        else:
-            print("아직 수사를 완료하지 못했네요. 본관과 세브란스에 가서 보고하세요.")
-        return
-
 def cmd_buy():
-    location = player.location
-    if location not in buy_places:
-        print("이곳에서는 구매할 수 없습니다.")
-        return
-    interact_shop()
+    place = places[state.player.location]
+    place.buy(state.player)
 
 def cmd_sell():
-    location = player.location
-    if location not in sell_places:
-        print("이곳에서는 판매할 수 없습니다.")
-        return
-    interact_sell()
+    place = places[state.player.location]
+    place.sell(state.player)
 
 def cmd_quest():
-    location = player.location
-    if location not in quest_places:
+    place = places[state.player.location]
+    if not place.quest_role:
         print("이곳에서는 임무가 없습니다.")
         return
-    result = handle_quest_interaction(location)
-    if result == "GAME_OVER":
-        return "GAME_OVER"
-    return None
+    return place.handle_quest(state.player)
 
 def cmd_difficulty():
     current = state.settings["difficulty"]

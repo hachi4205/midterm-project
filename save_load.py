@@ -1,9 +1,10 @@
 import pickle
 import os
 import state
+from io_helper import get_input
 
 def save_game():
-    filename = input("저장할 파일명을 입력하세요 (예: save1): ")
+    filename = get_input("저장할 파일명을 입력하세요 (예: save1): ")
     if not filename.endswith(".pkl"):
         filename += ".pkl"
 
@@ -11,8 +12,6 @@ def save_game():
         "player": state.player,
         "environment": state.environment,
         "settings": state.settings,
-        "row": state.row,
-        "col": state.col,
         "input_history": state.input_history
     }
     with open(filename, "wb") as f:
@@ -30,7 +29,7 @@ def load_game():
         print("현재 폴더에 저장 파일이 없습니다.")
         print("파일 경로를 직접 입력하세요 (상대경로/절대경로 모두 가능)")
 
-    choice = input("불러올 파일의 번호 또는 경로를 입력하세요: ")
+    choice = get_input("불러올 파일의 번호 또는 경로를 입력하세요: ")
     filename = None
     if choice.isdigit():
         idx = int(choice) - 1
@@ -52,10 +51,8 @@ def load_game():
         state.player = save_data["player"]
         state.environment = save_data["environment"]
         state.settings = save_data["settings"]
-        state.row = save_data["row"]
-        state.col = save_data["col"]
         state.input_history = save_data["input_history"]
         print(f"{filename}에서 게임을 불러왔습니다.")
-        print(f"현재 위치: {state.player['location']}, HP: {state.player['HP']}, 잔액: {state.player['balance']}원")
+        print(f"현재 위치: {state.player.location}, HP: {state.player.HP}, 잔액: {state.player.balance}원")
     except Exception as e:
         print(f"불러오기 실패: {e}")

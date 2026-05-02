@@ -20,7 +20,7 @@ class Player:
     
     def move(self, direction):
         from data import map_grid, event_info, hp_loss_by_difficulty
-        from actions import get_available_interactions
+        from place import places
         
         new_row, new_col = self.row, self.col
         if direction == "북":
@@ -44,15 +44,17 @@ class Player:
         difficulty = settings["difficulty"]
         hp_loss = hp_loss_by_difficulty.get(difficulty, 1)
         self.HP -= hp_loss
-        
+
+        place = places[self.location]
+
         move_msg = f"{self.location}에 도착했다."
-        if self.location in event_info:
-            move_msg += f" {event_info[self.location]}"
-        
-        interactions = get_available_interactions(self.location)
+        if place.event_info:
+            move_msg += f" {place.event_info}"
+
+        interactions = place.get_interactions()
         if interactions:
             move_msg += f" [{', '.join(interactions)}]"
-        
+
         print(move_msg)
 
 player = Player()
