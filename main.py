@@ -2,6 +2,7 @@ import state
 from actions import (show_status, show_quests, open_bag, move,
                      cmd_buy, cmd_sell, cmd_quest, cmd_difficulty) 
 from save_load import save_game, load_game
+from io_helper import get_input
 
 action_map = {
     "상태": show_status,
@@ -24,11 +25,11 @@ def main():
     print("배가 고프다.")
 
     while True:
-        user_input = input("입력: ")
-        state.input_history.append(user_input)
+        user_input = get_input("입력: ")
 
         if user_input == "종료":
             print("게임을 종료합니다.")
+            print("DEBUG input_history:", state.input_history)
             break
 
         if user_input in action_map:
