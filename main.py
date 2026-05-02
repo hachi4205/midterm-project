@@ -2,7 +2,7 @@ import state
 from actions import (show_quests, open_bag,
                      cmd_buy, cmd_sell, cmd_quest, cmd_difficulty) 
 from save_load import save_game, load_game
-from io_helper import get_input
+from io_helper import get_input, say, init_log_files, close_log_files
 
 action_map = {
     "상태": state.player.print_status,
@@ -19,26 +19,31 @@ action_map = {
 direction_set = {"동", "서", "남", "북"}
 
 def main():
-    print("송도 생활을 마치고 신촌에 처음 도착했다. 연대앞 버스정류장이다.")
-    print("학교에 들어가기 위해 정문에서 상호작용을 한다.")
-    print("학교에서 어떤 일이 벌어지고있을까?")
-    print("배가 고프다.")
+    init_log_files() 
 
-    while True:
-        user_input = get_input("입력: ")
+    try: 
+        say("송도 생활을 마치고 신촌에 처음 도착했다. 연대앞 버스정류장이다.")    # print → say
+        say("학교에 들어가기 위해 정문에서 상호작용을 한다.")                    # print → say
+        say("학교에서 어떤 일이 벌어지고있을까?")                                # print → say
+        say("배가 고프다.")
 
-        if user_input == "종료":
-            print("게임을 종료합니다.")
-            break
+        while True:
+            user_input = get_input("입력: ")
 
-        if user_input in action_map:
-            result = action_map[user_input]()   
-            if result == "GAME_OVER":         
+            if user_input == "종료":
+                say("게임을 종료합니다.")
                 break
-        elif user_input in direction_set:
-            state.player.move(user_input)
-        else:
-            print("잘못된 입력입니다.")
+
+            if user_input in action_map:
+                result = action_map[user_input]()   
+                if result == "GAME_OVER":         
+                    break
+            elif user_input in direction_set:
+                state.player.move(user_input)
+            else:
+                print("잘못된 입력입니다.")
+    finally:
+        close_log_files()
 
 if __name__ == "__main__":
     main()

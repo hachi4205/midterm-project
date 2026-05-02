@@ -12,15 +12,17 @@ class Player:
     
     def print_status(self):
         from actions import get_neighbors
+        from io_helper import say
         neighbors = get_neighbors()
-        print(f"계좌의 잔액 = {self.balance}원")
-        print(f"HP = {self.HP}")
-        print(f"현재위치 = {self.location}")
-        print(f"동서남북 = {neighbors['동']}, {neighbors['서']}, {neighbors['남']}, {neighbors['북']}")
+        say(f"계좌의 잔액 = {self.balance}원")
+        say(f"HP = {self.HP}")
+        say(f"현재위치 = {self.location}")
+        say(f"동서남북 = {neighbors['동']}, {neighbors['서']}, {neighbors['남']}, {neighbors['북']}")
     
     def move(self, direction):
         from data import map_grid, event_info, hp_loss_by_difficulty
         from place import places
+        from io_helper import say
         
         new_row, new_col = self.row, self.col
         if direction == "북":
@@ -35,7 +37,7 @@ class Player:
         if (new_row < 0 or new_row >= len(map_grid)
                 or new_col < 0 or new_col >= len(map_grid[0])
                 or map_grid[new_row][new_col] == ""):
-            print("그 방향은 막혔어.")
+            say("그 방향은 막혔어.")
             return
         
         self.row, self.col = new_row, new_col
@@ -55,7 +57,7 @@ class Player:
         if interactions:
             move_msg += f" [{', '.join(interactions)}]"
 
-        print(move_msg)
+        say(move_msg)
 
 player = Player()
 
