@@ -1,16 +1,62 @@
-player = {
-    "status": "배고픔",
-    "location": "연대앞 버스정류장",
-    "HP": 10.0,
-    "balance": 10000,
-    "inventory": [],
-    "quests": [],
-    "completed_quests": []
-}
+class Player:
+    def __init__(self):
+        self.status = "배고픔"
+        self.location = "연대앞 버스정류장"
+        self.HP = 10.0
+        self.balance = 10000
+        self.inventory = []
+        self.quests = []
+        self.completed_quests = []
+        self.row = 6
+        self.col = 0
+    
+    def print_status(self):
+        from actions import get_neighbors
+        neighbors = get_neighbors()
+        print(f"계좌의 잔액 = {self.balance}원")
+        print(f"HP = {self.HP}")
+        print(f"현재위치 = {self.location}")
+        print(f"동서남북 = {neighbors['동']}, {neighbors['서']}, {neighbors['남']}, {neighbors['북']}")
+    
+    def move(self, direction):
+        from data import map_grid, event_info, hp_loss_by_difficulty
+        from actions import get_available_interactions
+        
+        new_row, new_col = self.row, self.col
+        if direction == "북":
+            new_row = self.row - 1
+        elif direction == "남":
+            new_row = self.row + 1
+        elif direction == "동":
+            new_col = self.col + 1
+        elif direction == "서":
+            new_col = self.col - 1
+        
+        if (new_row < 0 or new_row >= len(map_grid)
+                or new_col < 0 or new_col >= len(map_grid[0])
+                or map_grid[new_row][new_col] == ""):
+            print("그 방향은 막혔어.")
+            return
+        
+        self.row, self.col = new_row, new_col
+        self.location = map_grid[self.row][self.col]
+        
+        difficulty = settings["difficulty"]
+        hp_loss = hp_loss_by_difficulty.get(difficulty, 1)
+        self.HP -= hp_loss
+        
+        move_msg = f"{self.location}에 도착했다."
+        if self.location in event_info:
+            move_msg += f" {event_info[self.location]}"
+        
+        interactions = get_available_interactions(self.location)
+        if interactions:
+            move_msg += f" [{', '.join(interactions)}]"
+        
+        print(move_msg)
+
+player = Player()
 
 environment = {"time": 11}
 settings = {"difficulty": "보통"}
 input_history = []
-
-row = 6
-col = 0
