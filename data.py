@@ -83,9 +83,8 @@ def load_events(filepath="events.pkl"):
 event_info, quest_answers = load_events()
 
 hp_loss_by_difficulty = {
-    "쉬움": 0.5,
     "보통": 1,
     "어려움": 2
 }
 
-valid_difficulties = ["쉬움", "보통", "어려움"]
+valid_difficulties = ["보통", "어려움"]
