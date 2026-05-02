@@ -7,6 +7,7 @@ from data import (
     quest_answers, quest_report_location, quest_questions,
     hp_loss_by_difficulty, valid_difficulties
 )
+from io_helper import get_input
 
 def get_neighbors():
     neighbors = {}
@@ -100,7 +101,7 @@ def interact_shop():
             print(f"{i}) {name}: {info['price']}원, HP +{info['HP_gain']}")
         print(f"{len(item_list) + 1}) 종료")
 
-        choice = input("선택하세요: ")
+        choice = get_input("선택하세요: ")
 
         if choice == str(len(item_list) + 1):
             print("구매를 종료합니다.")
@@ -150,7 +151,7 @@ def interact_sell():
             print(f"{i}) {name} x{sellable[name]}")
         print(f"{len(item_list) + 1}) 종료")
         
-        choice = input("선택하세요: ")
+        choice = get_input("선택하세요: ")
         
         if choice == str(len(item_list) + 1):
             print("판매를 종료합니다.")
@@ -177,7 +178,7 @@ def open_bag():
     for i, item in enumerate(player["inventory"], start=1):
         print(f"{i}) {item}")
 
-    sub_input = input("사용할 물건의 이름 또는 번호를 입력하세요 (또는 '종료'): ")
+    sub_input = get_input("사용할 물건의 이름 또는 번호를 입력하세요 (또는 '종료'): ")
     if sub_input == "종료":
         return
     if sub_input.isdigit():
@@ -248,8 +249,7 @@ def handle_quest_interaction(location):
             return
         
         print(info["question"])
-        answer = input("입력: ")
-        state.input_history.append(answer)
+        answer = get_input("입력: ")
         
         if answer == quest_answers[quest_name]:
             player["quests"].remove(quest_name)
@@ -315,8 +315,7 @@ def cmd_difficulty():
         print(f"{i}) {d}")
     print(f"{len(valid_difficulties) + 1}) 변경하지 않음")
     
-    choice = input("선택하세요: ")
-    state.input_history.append(choice)
+    choice = get_input("선택하세요: ")
     
     if choice == str(len(valid_difficulties) + 1):
         print("난이도를 변경하지 않습니다.")
