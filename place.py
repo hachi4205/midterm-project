@@ -101,31 +101,34 @@ class Place:
             print(f"{item_name}를 판매해서 {price}원을 벌었다. 계좌 잔액 = {player.balance}원")
     
     def handle_quest(self, player):
-        from data import (intro_quest, available_quests, 
-                        quest_questions, quest_answers)
+        from data import quest_questions, quest_answers
+        from quest import quests
         from io_helper import get_input
+    
+        intro_name = "독수리상으로 가기"
+        main_quest_names = ["교내 부조리 수사", "교내 위생사건 수사"]
         
         if self.quest_role == "give_intro":
-            if (intro_quest["name"] not in player.quests 
-                    and intro_quest["name"] not in player.completed_quests):
-                print(intro_quest["description"])
-                player.quests.append(intro_quest["name"])
+            if (intro_name not in player.quests 
+                    and intro_name not in player.completed_quests):
+                print(quests[intro_name].description)
+                player.quests.append(intro_name)
                 print("[임무목록]에 임무가 추가되었습니다.")
             else:
                 print("이미 독수리상으로 가는 임무를 받았습니다.")
             return
         
         if self.quest_role == "give_quests":
-            if intro_quest["name"] in player.quests:
-                player.quests.remove(intro_quest["name"])
-                player.completed_quests.append(intro_quest["name"])
-                print(f"다음의 임무가 해결되었다! [{intro_quest['description']}]")
+            if intro_name in player.quests:
+                player.quests.remove(intro_name)
+                player.completed_quests.append(intro_name)
+                print(f"다음의 임무가 해결되었다! [{quests[intro_name].description}]")
             
-            for q_name, q_info in available_quests.items():
+            for q_name in main_quest_names:
                 if (q_name not in player.quests 
                         and q_name not in player.completed_quests):
                     player.quests.append(q_name)
-                    print(f"{q_name} - {q_info['description']}")
+                    print(quests[q_name])
             return
         
         if self.quest_role in ("report_bujori", "report_wisaeng"):

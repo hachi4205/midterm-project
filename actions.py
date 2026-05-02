@@ -1,6 +1,7 @@
 import state
 from state import player
-from data import map_grid, hp_loss_by_difficulty, valid_difficulties, available_quests
+from data import map_grid, valid_difficulties
+from quest import quests
 from io_helper import get_input
 from place import places
 
@@ -62,15 +63,15 @@ def use_item(item_name):
 
 
 def show_quests():
-    if len(player.quests) == 0:
+    if len(state.player.quests) == 0:
         print("현재 가지고있는 임무가 없습니다.")
         return
     print("[임무목록]")
-    for q in player.quests:
-        if q in available_quests:
-            print(f"- {q}: {available_quests[q]['description']}")
+    for q_name in state.player.quests:
+        if q_name in quests:
+            print(f"- {quests[q_name]}")   
         else:
-            print(f"- {q}")
+            print(f"- {q_name}")
 
 def cmd_buy():
     place = places[state.player.location]
