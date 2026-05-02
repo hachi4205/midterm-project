@@ -41,7 +41,7 @@ def main():
             elif user_input in direction_set:
                 state.player.move(user_input)
             else:
-                print("잘못된 입력입니다.")
+                say("잘못된 입력입니다.")
     finally:
         close_log_files()
 
