@@ -19,7 +19,10 @@ def save_game():
     say(f"게임이 {filename}에 저장되었습니다.")
 
 def load_game():
-    pkl_files = [f for f in os.listdir(".") if f.endswith(".pkl")]
+    excluded = {"event.bin"}
+    pkl_files = [f for f in os.listdir(".")
+                 if (f.endswith(".pkl") or f.endswith(".bin"))
+                 and f not in excluded]
     if len(pkl_files) > 0:
         say("현재 폴더의 저장 파일들:")
         for i, name in enumerate(pkl_files, start=1):

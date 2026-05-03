@@ -65,11 +65,10 @@ sell_prices = {
 
 quest_places = ["정문", "독수리상", "본관", "세브란스", "이윤재관"]
 
-def load_events(filepath="events.pkl"):
+def load_events(filepath="event.bin"):
     if not os.path.exists(filepath):
-        print(f"{filepath} 파일을 찾을 수 없습니다. create_events.py를 먼저 실행하세요.")
+        print(f"{filepath} 파일을 찾을 수 없습니다.")
         return {}, {}
-    
     try:
         with open(filepath, "rb") as f:
             data = pickle.load(f)
@@ -77,7 +76,7 @@ def load_events(filepath="events.pkl"):
         answers = data.get("answers", {})
         return events, answers
     except Exception as e:
-        print(f"events.pkl 로드 중 오류: {e}")
+        print(f"{filepath} 로드 중 오류: {e}")
         return {}, {}
 
 event_info, quest_answers = load_events()
