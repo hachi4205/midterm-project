@@ -11,15 +11,28 @@
 
 ## 🚀 실행 방법
 
+### 일반 실행
+
 ```bash
 python main.py
 ```
 
-`events.pkl` 파일이 없는 경우 먼저 생성해야 합니다:
+### 교수님이 주신 `run.py`로 실행 (채점 환경과 동일)
 
 ```bash
-python create_events.py
+python run.py main.py
 ```
+
+`run.py`는 모든 출력을 터미널과 `output_log.txt`에 동시에 기록합니다.
+
+### 저장된 입력 파일로 재현 실행
+
+```bash
+python run.py main.py --input player_input.txt
+```
+
+> ⚠️ `event.bin` (사건관련정보 + 임무 정답 파일)은 프로젝트 폴더에 함께 있어야 합니다.
+> 이 파일은 교수님께서 배포하신 파일이며, 게임 시작 시 `data.py`에서 자동으로 로드합니다.
 
 ## 🎮 게임 명령어
 
@@ -40,14 +53,14 @@ python create_events.py
 ## 🗺️ 지도
 
 ```
-종합관   본관    경영관     노천극장  새천년관  이윤재관
-백양관   백양로5  대강당     음악관    알렌관    ABMRC
-중앙도서관 독수리상 학생회관   루스채플  재활병원  치과대학
-체육관   백양로3  공터2      광혜원    어린이병원 세브란스
-공학관   백양로2  백주년기념관 안과병원  제중관
-공학원   백양로1  공터1      암병원    의과대학
-연대앞   정문    스타벅스    세브란스
-버스정류장              버스정류장
+종합관      본관     경영관       노천극장   새천년관    이윤재관
+백양관      백양로5  대강당       음악관     알렌관      ABMRC
+중앙도서관   독수리상  학생회관     루스채플    재활병원    치과대학
+체육관      백양로3   공터2       광혜원     어린이병원   세브란스
+공학관      백양로2   백주년기념관  안과병원    제중관
+공학원      백양로1   공터1       암병원     의과대학
+연대앞      정문      스타벅스     세브란스
+버스정류장                                  버스정류장
 ```
 
 ## 📁 프로젝트 구조
@@ -56,14 +69,14 @@ python create_events.py
 midterm-project/
 ├── main.py              # 메인 게임 루프 + 명령어 매핑
 ├── state.py             # Player 클래스 + 게임 상태
-├── data.py              # 지도, 상점, 임무 등 정적 데이터 + events.pkl 로드
+├── data.py              # 지도, 상점, 임무 등 정적 데이터 + event.bin 로드
 ├── place.py             # Place 클래스 + 장소별 동작 (구매/판매/임무)
 ├── quest.py             # Quest 클래스 + 임무 정의
 ├── actions.py           # 사용자 명령어 핸들러
 ├── save_load.py         # 저장 및 불러오기 (pickle)
 ├── io_helper.py         # 입출력 래퍼 (player_input.txt, game_output.txt 자동 기록)
-├── create_events.py     # events.pkl 생성 스크립트
-├── events.pkl           # 사건관련정보 + 임무 정답 (pickle)
+├── run.py               # (교수님 제공) 채점용 실행 래퍼
+├── event.bin            # (교수님 제공) 사건관련정보 + 임무 정답 (pickle)
 ├── player_input.txt     # 플레이 중 입력 기록 ([숫자] 형식)
 ├── game_output.txt      # 플레이 중 출력 기록 ([숫자] 형식)
 └── play1.pkl            # 저장 파일 예시
@@ -88,6 +101,26 @@ midterm-project/
 - `description`: 임무 설명
 - `report_to`: 보고할 장소
 
+## 📦 사건관련정보 (event.bin)
+
+게임 시작 시 `data.py`의 `load_events()` 함수가 `event.bin`을 읽어 다음 정보를 로드합니다.
+
+```python
+{
+    "events": {
+        "노천극장": "아카라카 공연 티켓 암표 거래가 이루어지고 있다.",
+        "대강당": "행사 도시락이 상온에 오래 방치되어 식중독 의심 증상이 보고되었다."
+    },
+    "answers": {
+        "교내 부조리 수사": "노천극장",
+        "교내 위생사건 수사": "대강당"
+    }
+}
+```
+
+- `events`: 특정 장소에 도착했을 때 출력되는 사건 메시지
+- `answers`: 본관 / 세브란스에서 보고할 때의 정답
+
 ## 💾 저장 형식
 
 `pickle`로 직렬화된 dictionary:
@@ -102,6 +135,7 @@ midterm-project/
 ```
 
 `불러오기`는 현재 폴더 파일 번호 또는 직접 경로 (상대/절대) 모두 지원합니다.
+시스템 파일 (`event.bin` 등)은 저장 파일 목록에서 자동으로 제외됩니다.
 
 ## 🎯 난이도
 
@@ -112,7 +146,7 @@ midterm-project/
 
 ## 📝 입출력 기록
 
-게임 실행 시 `io_helper.py`의 Tee 패턴을 통해 모든 입력과 출력이 자동으로 파일에 기록됩니다.
+`io_helper.py`의 `say()` / `get_input()` 래퍼를 통해 모든 입력과 출력이 자동으로 번호와 함께 파일에 기록됩니다.
 
 - `player_input.txt`: 플레이어가 입력한 모든 명령어 (`[1] 동`, `[2] 임무`, ...)
 - `game_output.txt`: 게임이 출력한 모든 메시지 (`[1] ...`, `[2] ...`, ...)
@@ -121,15 +155,13 @@ midterm-project/
 
 ## 🧪 재현성 테스트
 
-`player_input.txt`의 모든 입력을 차례대로 다시 입력하면, `game_output.txt`와 동일한 출력이 생성되는지 확인할 수 있습니다.
+`player_input.txt`의 입력을 그대로 다시 넣어 게임을 실행하면, `game_output.txt`와 동일한 출력이 생성됩니다.
 
 ```bash
-# 입력 파일 생성 (번호 제거)
-sed 's/^\[[0-9]*\] //' player_input.txt > replay_inputs.txt
-
-# 재현
-python main.py < replay_inputs.txt
+python run.py main.py --input player_input.txt
 ```
+
+`run.py`는 입력 파일의 각 줄을 순서대로 `input()` 호출에 주입하여 게임을 자동 재생합니다.
 
 ## 🛠️ 개발 환경
 
